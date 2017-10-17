@@ -15,14 +15,14 @@ for(x in selected_patients){
 }
 
 hosptowes2 <- hosptowes[temp_vec,]
-selection <- liu_vcf[,as.character(hosptowes2$WES_ID)]
+selection <- input_vcf[,as.character(hosptowes2$WES_ID)]
 colnames(selection) <- hosptowes2$UMCG_ID
 
-temp_id_list <- vector(length = length(rownames(liu_vcf)))
-for(y in 1:length(rownames(liu_vcf))){
+temp_id_list <- vector(length = length(rownames(input_vcf)))
+for(y in 1:length(rownames(input_vcf))){
   if(liu_vcf$ID[y] == ".") {
-          temp_id_list[y] <- paste(liu_vcf$CHROM[y],liu_vcf$POS[y],liu_vcf$REF[y],liu_vcf$ALT[y],sep="_")}
-  else {temp_id_list[y] <- liu_vcf$ID[y]}
+          temp_id_list[y] <- paste(input_vcf$CHROM[y],input_vcf$POS[y],input_vcf$REF[y],input_vcf$ALT[y],sep="_")}
+  else {temp_id_list[y] <- input_vcf$ID[y]}
 }
 
 temp_id_list2 <- temp_id_list
@@ -52,7 +52,7 @@ rownames(sel_sim) <- sel_sim[,1]
 sel_sim <- sel_sim[,-1]
 colnames(sel_sim) <- colnames(selection)
 
-snp_pos <- cbind(temp_id_list2,liu_vcf$CHROM,liu_vcf$POS)
+snp_pos <- cbind(temp_id_list2,input_vcf$CHROM,input_vcf$POS)
 colnames(snp_pos) <- c("snp","chr","pos")
 
 write.table(sel_sim,"test_run_QTLs/MeQTL_Liu_165test_clumpstrict_maf3percent_genotype.txt",sep="\t", quote=F)
@@ -143,8 +143,7 @@ umcg_to_biopsy <- read.table("Biopsies_docs/Biopsies_documents/UMCGtoBiopsy.txt"
 row.names(umcg_to_biopsy) <- umcg_to_biopsy$Biopsy_ID
 umcg_to_biopsy$Biopsy_ID <- NULL
 selected_patients <- umcg_to_biopsy[match(colnames(vsd_test_inf),row.names(umcg_to_biopsy)),]
-liu_vcf <- read.table("test_run_QTLs/Liu_hwe_regions_250KB.recode.unique.vcf", sep="\t", stringsAsFactors=F, header = T, check.names = F)
-#liu_vcf_filtered <- unique(liu_vcf)
+input_vcf <- read.table("test_run_QTLs/Liu_hwe_regions_250KB.recode.unique.vcf", sep="\t", stringsAsFactors=F, header = T, check.names = F)
 hosptowes <- read.table("WES_documents/UMCGtoWESconv.txt", sep="\t", stringsAsFactors=F, header = T)
 
 temp_vec <- NULL 
@@ -154,11 +153,11 @@ for(x in selected_patients){
 
 hosptowes2 <- hosptowes[temp_vec,]
 
-temp_id_list <- vector(length = length(rownames(liu_vcf)))
-for(y in 1:length(rownames(liu_vcf))){
-  if(liu_vcf$ID[y] == ".") {
-    temp_id_list[y] <- paste(liu_vcf$CHROM[y],liu_vcf$POS[y],liu_vcf$REF[y],liu_vcf$ALT[y],sep="_")}
-  else {temp_id_list[y] <- liu_vcf$ID[y]}
+temp_id_list <- vector(length = length(rownames(input_vcf)))
+for(y in 1:length(rownames(input_vcf))){
+  if(input_vcf$ID[y] == ".") {
+    temp_id_list[y] <- paste(input_vcf$CHROM[y],input_vcf$POS[y],input_vcf$REF[y],input_vcf$ALT[y],sep="_")}
+  else {temp_id_list[y] <- input_vcf$ID[y]}
 }
 
 temp_id_list2 <- temp_id_list
@@ -174,7 +173,7 @@ dup_check <- duplicated(temp_id_list2)
 temp_id_list2[which(dup_check== TRUE)] <- paste(temp_id_list2[which(dup_check== TRUE)],"6",sep="_")
 
 colnames(vsd_test_inf) <- hosptowes2$UMCG_ID
-selection <- liu_vcf[,as.character(hosptowes2$WES_ID)]
+selection <- input_vcf[,as.character(hosptowes2$WES_ID)]
 colnames(selection) <- hosptowes2$UMCG_ID
 
 sel_sim <- matrix(ncol=dim(selection)[2],nrow=dim(selection)[1])
