@@ -1,0 +1,122 @@
+setwd("Desktop")
+temp_doubleids <- read.table(file="test_run_QTLs/165test_passonly.noXnoY.hwe.maf3percent_doubleids.txt",header=T,stringsAsFactors=F)
+
+temp_noids <- temp_doubleids[grep("\\.",temp_doubleids$rsid),]
+temp_noids$rsid <- gsub(":","_",temp_noids$customid)
+temp_rsids <- temp_doubleids[grep("\\.",temp_doubleids$rsid,invert = T),]
+temp_doubleids_cor <- rbind(temp_rsids,temp_noids)
+
+
+dup_check <- duplicated(temp_doubleids_cor$rsid)
+temp_doubleids_cor$rsid[which(dup_check== TRUE)] <- paste(temp_doubleids_cor$rsid[which(dup_check== TRUE)],"2",sep="_")
+dup_check <- duplicated(temp_doubleids_cor$rsid)
+temp_doubleids_cor$rsid[which(dup_check== TRUE)] <- paste(temp_doubleids_cor$rsid[which(dup_check== TRUE)],"3",sep="_")
+dup_check <- duplicated(temp_doubleids_cor$rsid)
+temp_doubleids_cor$rsid[which(dup_check== TRUE)] <- paste(temp_doubleids_cor$rsid[which(dup_check== TRUE)],"4",sep="_")
+dup_check <- duplicated(temp_doubleids_cor$rsid)
+temp_doubleids_cor$rsid[which(dup_check== TRUE)] <- paste(temp_doubleids_cor$rsid[which(dup_check== TRUE)],"5",sep="_")
+dup_check <- duplicated(temp_doubleids_cor$rsid)
+temp_doubleids_cor$rsid[which(dup_check== TRUE)] <- paste(temp_doubleids_cor$rsid[which(dup_check== TRUE)],"6",sep="_")
+
+bsa_intersect_ids <- intersect(temp_doubleids_cor$rsid,bsa_qtls$snps)
+bsa_annotated <- bsa_qtls[match(bsa_intersect_ids,bsa_qtls$snps),]
+
+bsa_annotated[,7]<-"NULL"
+for (a in 1:nrow(bsa_annotated)){
+  
+  temp <- temp_doubleids_cor[ temp_doubleids_cor$rsid == bsa_annotated$snps[a], ]
+  
+  if (nrow(temp)>0) {
+    bsa_annotated[a,7] <- temp[1,2]    
+  }
+  
+}
+
+
+input_vcf <- read.table("test_run_QTLs/165test_v29_rinseids.snpeff.exac.gonl.caddsnv.merge.RVCF.passonly.noXnoY.hwe.maf2percent.recode.vcf", sep="\t", stringsAsFactors=F, header = T, check.names = F)
+temp_cleanrs <- unlist(strsplit(temp_multirs$snps,"_"))[grep("rs",unlist(strsplit(temp_multirs$snps,"_")))]
+temp_cleanrs_intersect <- intersect(temp_cleanrs,bsa_annotated$snps)
+
+temp_cleanrs_two <- unlist(strsplit(temp_multirs_two,"_"))[grep("rs",unlist(strsplit(temp_multirs_two,"_")))]
+temp_cleanrs_intersect_two <- intersect(temp_cleanrs_two,bsa_annotated$snps)
+temp_doubleids_two <- cbind(temp_cleanrs_intersect_two,"NULL")
+for (t in 1:length(temp_cleanrs_intersect_two)) {
+  rsdata <- input_vcf[grep(temp_cleanrs_intersect_two[t],input_vcf$ID),1:5]
+  temp_doubleids_two[t,2] <- paste(rsdata$CHROM[2],rsdata$POS[2],rsdata$REF[2],rsdata$ALT[2],sep=":")
+}
+temp_doubleids_ready_two <- unique(cbind(paste0(temp_doubleids_two[,1],"_2"),temp_doubleids_two[,2]))
+temp_doubleids_ready_all <- temp_doubleids_ready_two
+
+temp_cleanrs_three <- unlist(strsplit(temp_multirs_three,"_"))[grep("rs",unlist(strsplit(temp_multirs_three,"_")))]
+temp_cleanrs_intersect_three <- intersect(temp_cleanrs_three,bsa_annotated$snps)
+if(length(temp_cleanrs_intersect_three)!=0) {
+  temp_doubleids_three <- cbind(temp_cleanrs_intersect_three,"NULL")
+  for (u in 1:length(temp_cleanrs_intersect_three)) {
+    rsdata <- input_vcf[grep(temp_cleanrs_intersect_three[u],input_vcf$ID),1:5]
+    temp_doubleids_three[u,2] <- paste(rsdata$CHROM[3],rsdata$POS[3],rsdata$REF[3],rsdata$ALT[3],sep=":")
+  }
+  temp_doubleids_ready_three <- unique(cbind(paste0(temp_doubleids_three[,1],"_2_3"),temp_doubleids_three[,2]))
+  temp_doubleids_ready_all <- rbind(temp_doubleids_ready_all,temp_doubleids_ready_three)
+} else{temp_doubleids_ready_three <- NULL}
+
+temp_cleanrs_four <- unlist(strsplit(temp_multirs_four,"_"))[grep("rs",unlist(strsplit(temp_multirs_four,"_")))]
+temp_cleanrs_intersect_four <- intersect(temp_cleanrs_four,bsa_annotated$snps)
+if(length(temp_cleanrs_intersect_four)!=0) {
+  temp_doubleids_four <- cbind(temp_cleanrs_intersect_four,"NULL")
+  for (v in 1:length(temp_cleanrs_intersect_four)) {
+    rsdata <- input_vcf[grep(temp_cleanrs_intersect_four[v],input_vcf$ID),1:5]
+    temp_doubleids_four[v,2] <- paste(rsdata$CHROM[4],rsdata$POS[4],rsdata$REF[4],rsdata$ALT[4],sep=":")
+  }
+  temp_doubleids_ready_four <- unique(cbind(paste0(temp_doubleids_four[,1],"_2_3_4"),temp_doubleids_four[,2]))
+  temp_doubleids_ready_all <- rbind(temp_doubleids_ready_all,temp_doubleids_ready_four)
+} else{temp_doubleids_ready_four <- NULL}
+
+temp_cleanrs_five <- unlist(strsplit(temp_multirs_five,"_"))[grep("rs",unlist(strsplit(temp_multirs_five,"_")))]
+temp_cleanrs_intersect_five <- intersect(temp_cleanrs_five,bsa_annotated$snps)
+if(length(temp_cleanrs_intersect_five)!=0) {
+  temp_doubleids_five <- cbind(temp_cleanrs_intersect_five,"NULL")
+  for (x in 1:length(temp_cleanrs_intersect_five)) {
+    rsdata <- input_vcf[grep(temp_cleanrs_intersect_five[x],input_vcf$ID),1:5]
+    temp_doubleids_five[x,2] <- paste(rsdata$CHROM[5],rsdata$POS[5],rsdata$REF[5],rsdata$ALT[5],sep=":")
+  }
+  temp_doubleids_ready_five <- unique(cbind(paste0(temp_doubleids_five[,1],"_2_3_4_5"),temp_doubleids_five[,2]))
+  temp_doubleids_ready_all <- rbind(temp_doubleids_ready_all,temp_doubleids_ready_five)
+} else{temp_doubleids_ready_five <- NULL}
+
+temp_cleanrs_six <- unlist(strsplit(temp_multirs_six,"_"))[grep("rs",unlist(strsplit(temp_multirs_six,"_")))]
+temp_cleanrs_intersect_six <- intersect(temp_cleanrs_six,bsa_annotated$snps)
+if(length(temp_cleanrs_intersect_six)!=0) {
+  temp_doubleids_six <- cbind(temp_cleanrs_intersect_six,"NULL")
+  for (y in 1:length(temp_cleanrs_intersect_six)) {
+    rsdata <- input_vcf[grep(temp_cleanrs_intersect_six[y],input_vcf$ID),1:5]
+    temp_doubleids_six[y,2] <- paste(rsdata$CHROM[6],rsdata$POS[6],rsdata$REF[6],rsdata$ALT[6],sep=":")
+  }
+  temp_doubleids_ready_six <- unique(cbind(paste0(temp_doubleids_six[,1],"_2_3_4_5_6"),temp_doubleids_six[,2]))
+  temp_doubleids_ready_all <- rbind(temp_doubleids_ready_all,temp_doubleids_ready_six)
+} else{temp_doubleids_ready_six <- NULL}
+
+colnames(temp_doubleids_ready_all) <- c("rsid","customid")
+multirs_qtls_intersect <- bsa_qtls[match(intersect(temp_doubleids_ready_all[,1],bsa_qtls$snps),bsa_qtls$snps),]
+
+multirs_qtls_intersect[,7]<-"NULL"
+for (b in 1:nrow(multirs_qtls_intersect)){
+  
+  temp1 <- temp_doubleids_ready_all[ temp_doubleids_ready_all[,1] == multirs_qtls_intersect$snps[b], ]
+  
+  if (length(temp1)>0) {
+    multirs_qtls_intersect[b,7] <- temp1[2]    
+  }
+}
+
+multirs_final <- unique(cbind(multirs_qtls_intersect$snps,multirs_qtls_intersect$V7,multirs_qtls_intersect$pvalue))
+
+bsa_final <- cbind(bsa_annotated$snps,bsa_annotated$V7,bsa_annotated$pvalue)
+colnames(bsa_final) <- c("rsID","snpID","P")
+bsa_final_sorted <- bsa_final[order(as.numeric(bsa_final[,3])),]
+
+bsa_multi_complete <- rbind(bsa_final_sorted,multirs_final)
+bsa_multi_complete <- unique(bsa_multi_complete)
+colnames(bsa_multi_complete) <- c("rsID","snpID","P")
+bsa_multi_complete_sorted <- bsa_multi_complete[order(as.numeric(bsa_multi_complete[,3])),]
+
+write.table(bsa_multi_complete_sorted,file="test_run_QTLs/165test_clumpstrict_maf2percent_modinf_ciseQTLs_modIDs.txt",sep="\t",row.names=F,quote=F )
