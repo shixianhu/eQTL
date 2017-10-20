@@ -18,17 +18,17 @@ base.dir = getwd();
 useModel = modelLINEAR;
 
 # Genotype file name
-snps_location_file_name = paste(base.dir,"/test_run_QTLs/test_whole_exome/MeQTL_we_snp_pos.txt", sep="");
-SNP_file_name = paste(base.dir,"/test_run_QTLs/MeQTL_maf2percent_genotype.txt", sep="");
+snps_location_file_name = paste(base.dir,"test_whole_exome/MeQTL_165test_clumpstrict_maf5percent_hwe_nomiss_snp_pos.txt", sep="");
+SNP_file_name = paste(base.dir,"MeQTL_165test_clumpstrict_maf5percent_hwe_nomiss_genotype.txt", sep="");
 
 # Gene expression file name
-expression_file_name = paste(base.dir,"/test_run_QTLs/MeQTL_gavin_test_counts.txt", sep="");
-gene_location_file_name = paste(base.dir, "/MeQTL_material/MeQTL_ready_gene_pos.txt", sep="");
+expression_file_name = paste(base.dir,"MeQTL_gavin_test_counts.txt", sep="");
+gene_location_file_name = paste(base.dir, "MeQTL_ready_gene_pos.txt", sep="");
 
 # Covariates file name
 # Set to character() for no covariates
 #covariates_file_name =  character();
-covariates_file_name = paste(base.dir,"/test_run_QTLs/MeQTL_liu_test_modinf_allcov_cov.txt", sep="");
+covariates_file_name = paste(base.dir,"MeQTL_liu_test_modinf_allcov_cov.txt", sep="");
 
 # Output file name
 output_file_name_cis = tempfile();
@@ -103,3 +103,20 @@ unlink(output_file_name_tra);
 unlink(output_file_name_cis);
 
 all <- me$cis$eqtls
+all.fdr <- all[which(all$FDR<0.05),] #subset snp-gene pairs with fdr less than 0.05
+
+###Extract variant per gene from eQTLs
+geneid_dup <- unique(as.character(all.fdr$gene[duplicated(all.fdr$gene)]))
+all.multi <- NULL
+for (x in geneid_dup){
+  geneid <- x
+  eqtls <- all.fdr[grep(x,all.fdr$gene),]
+  all.multi <- rbind(all.multi,eqtls)
+}
+
+geneid_single <- setdiff(all.fdr$gene,geneid_dup)
+all.single <- all.fdr[all.fdr$gene %in% geneid_single,]
+
+write.table(all.fdr,file="165test_clumpstrict_hwe_nomiss_maf5percent_modinf_FDR5percent_ciseQTLs.txt", quote=F, row.names=F, sep="\t")
+write.table(all.single,file="165test_clumpstrict_hwe_nomiss_maf5percent_modinf_FDR5percent_single_ciseQTLs.txt", quote=F, row.names=F, sep="\t")
+write.table(all.multi,file="165test_clumpstrict_hwe_nomiss_maf5percent_modinf_FDR5percent_multi_ciseQTLs.txt", quote=F, row.names=F, sep="\t")
