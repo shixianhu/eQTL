@@ -1,3 +1,9 @@
+###Data preparation for LD-based clumping by Plink
+
+#Creator: Ruggero Barbieri
+
+#Date:2016
+
 setwd("Desktop")
 temp_doubleids <- read.table(file="test_run_QTLs/165test_passonly.noXnoY.hwe.maf2percent_doubleids.txt",header=T,stringsAsFactors=F)
 
