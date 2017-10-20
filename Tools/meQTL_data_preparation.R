@@ -1,3 +1,9 @@
+###Data preparation for a Matrix-eQTL run
+
+#Creator: Ruggero Barbieri
+
+#Date:2016
+
 setwd("Desktop")
 vsd_test <- read.table(file="test_run_QTLs/complete_QC_counts_vsd_table_test.txt", header = T,check.names=F )
 umcg_to_biopsy <- read.table("Biopsies_docs/Biopsies_documents/UMCGtoBiopsy.txt", header=T, stringsAsFactors = F)
