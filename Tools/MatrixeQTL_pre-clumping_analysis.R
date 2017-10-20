@@ -1,3 +1,10 @@
+###Matrix-eQTL sample code with and added portion to extract non-independent eQTLs to be clumped
+
+#Creator: Ruggero Barbieri
+
+#Date:2017
+
+
 # Matrix eQTL by Andrey A. Shabalin
 # http://www.bios.unc.edu/research/genomic_software/Matrix_eQTL/
 # 
