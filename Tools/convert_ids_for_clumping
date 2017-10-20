@@ -1,5 +1,5 @@
 setwd("Desktop")
-temp_doubleids <- read.table(file="test_run_QTLs/165test_passonly.noXnoY.hwe.maf3percent_doubleids.txt",header=T,stringsAsFactors=F)
+temp_doubleids <- read.table(file="test_run_QTLs/165test_passonly.noXnoY.hwe.maf2percent_doubleids.txt",header=T,stringsAsFactors=F)
 
 temp_noids <- temp_doubleids[grep("\\.",temp_doubleids$rsid),]
 temp_noids$rsid <- gsub(":","_",temp_noids$customid)
