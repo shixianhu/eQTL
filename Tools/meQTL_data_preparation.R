@@ -1,6 +1,5 @@
 setwd("Desktop")
 vsd_test <- read.table(file="test_run_QTLs/complete_QC_counts_vsd_table_test.txt", header = T,check.names=F )
-vsd <- read.table(file="Biopsies_docs/Biopsies_documents/complete_QC_counts_vsd_table_pil280.txt",header=T,check.names=F)
 umcg_to_biopsy <- read.table("Biopsies_docs/Biopsies_documents/UMCGtoBiopsy.txt", header=T, stringsAsFactors = F)
 row.names(umcg_to_biopsy) <- umcg_to_biopsy$Biopsy_ID
 umcg_to_biopsy$Biopsy_ID <- NULL
@@ -57,6 +56,8 @@ colnames(snp_pos) <- c("snp","chr","pos")
 
 write.table(sel_sim,"test_run_QTLs/MeQTL_Liu_165test_clumpstrict_maf3percent_genotype.txt",sep="\t", quote=F)
 write.table(snp_pos,"test_run_QTLs/MeQTL_Liu_165test_clumpstrict_maf3percent_snp_pos.txt",sep="\t", quote=F,row.names = F)
+
+##Preparing covariates files
 
 pheno_p <- read.csv("Biopsies_docs/Biopsies_documents/Pilot_proposal.csv", header=T, sep=";", row.names = 2)
 pheno_p$Research_ID <- NULL
@@ -131,11 +132,11 @@ cov_id <- cbind(colnames(sel_sim),batch,sex,age)
 colnames(cov_id)[1] <- "ID"
 cov_id2 <- t(cov_id)
 
-nolab_allcov <- t(cbind(batch,sex,age,inf,diag,loc))
+labeled_allcov <- t(cbind(colnames(sel_sim),batch,sex,age,inf,diag,loc))
 
 write.table(batch_id2,"MeQTL_gavin_test_cov_batch.txt",sep="\t", quote=F, col.names = F)
 write.table(cov_id2,"MeQTL_liu_test_cov.txt",sep="\t", quote=F, col.names = F)
-write.table(nolab_allcov,"MeQTL_liu_test_nolab_allcov.txt",sep="\t", quote=F, col.names = F)
+write.table(labeled_allcov,"MeQTL_liu_test_allcov.txt",sep="\t", quote=F, col.names = F)
 
 ##Preparing Inflammation based data
 vsd_test_inf <- read.table(file="test_run_QTLs/infOnly_QC_dedup_values_R.txt", header = T,check.names=F )
@@ -207,9 +208,22 @@ sex[grepl("Female",sex)] <- 1
 
 age <- pheno_inf$age_at_biopsy
 
+diag <- as.character(pheno_inf$Diagnosis)
+diag[grepl("IBDU",diag)] <- "Ulcerative colitis"
+diag[grepl("Crohn's disease",diag)] <- 0
+diag[grepl("Ulcerative colitis",diag)] <- 1
+
+loc <- as.character(pheno_inf$Location)
+loc[grep("ileum",loc,invert=T)] <- "colon"
+loc[grepl("colon",loc)] <- 0
+loc[grepl("ileum",loc)] <- 1
+
 
 cov_id <- cbind(colnames(sel_sim),batch,sex,age)
 colnames(cov_id)[1] <- "ID"
 cov_id2 <- t(cov_id)
 
+labeled_allcov_inf <- t(cbind(colnames(sel_sim),batch,sex,age,inf,diag,loc))
+
 write.table(cov_id2,"MeQTL_liu_inf_cov.txt",sep="\t", quote=F, col.names = F)
+write.table(labeled_allcov_inf,"MeQTL_liu_inf_allcov.txt",sep="\t", quote=F, col.names = F)
