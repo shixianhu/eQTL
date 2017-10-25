@@ -17,6 +17,7 @@ vcftools --vcf input_165_passonly_noXnoY.vcf --recode --hwe 0.000001 --out input
 vcftools --vcf input_165_passonly_noXnoY_hwe.vcf --recode --maf 0.05 --out input_165_passonly_noXnoY_hwe_maf5percent; #filter by MAF
 vcftools --vcf input_165_passonly_noXnoY_hwe_maf3percent.vcf --recode --max-missing 1 --out input_165_passonly_noXnoY_hwe_maf3percent_nomiss; #remove variants with missing genotypes
 #Use the command "scp" to copy the resulting VCF to your machine if necessary
+```
 
 1.Prepare the data necessary for Matrix-eQTL
 --------------------------------------------
@@ -71,7 +72,7 @@ temp_doubleids_cor$rsid[which(dup_check== TRUE)] <- paste(temp_doubleids_cor$rsi
 write.table(temp_doubleids_cor, file="input_doubleids_cor.txt", quote=F, row.names=F, sep="\t")
 
 #Use the "scp" command to upload this file to the cluster, in the same folder as the "multi" eQTL file  
-
+```
 4.Per gene clumping
 -------------------
 ###Work in Progress
