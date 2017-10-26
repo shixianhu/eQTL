@@ -88,3 +88,102 @@ for (j in 1:100){
   print(plot_list[[j]])
 }
 dev.off()  
+
+
+##Inflammation related dataset (use with relevant dataset)
+
+#infvsnin_samples <- read.table("test_run_QTLs/infvsnin_RNA_samples.txt",header=T,stringsAsFactors=F)
+#hosptowes <- read.table("WES_documents/UMCGtoWESconv.txt", sep="\t", stringsAsFactors=F, header = T)
+
+#infsamples <- infvsnin_samples[infvsnin_samples$Inflammation=="I",]
+#rownames(infsamples) <- infsamples$ID
+#ninsamples <- infvsnin_samples[infvsnin_samples$Inflammation=="NI",]
+#rownames(ninsamples) <- ninsamples$ID
+
+#pheno_test_inf <- pheno_vsd2[rownames(infsamples),]
+#vsd_test_inf <- vsd[,rownames(pheno_test_inf)]
+#vsd_test_inf <- cbind(vsd$ID,vsd_test_inf)
+#colnames(vsd_test_inf)[1] <- "ID"
+#selected_patients_inf <- umcg_to_biopsy[match(rownames(pheno_test_inf),row.names(umcg_to_biopsy)),]
+#temp_vec_inf <- NULL 
+#for(x in selected_patients_inf){
+#  temp_vec_inf <- c(temp_vec_inf,grep(unlist(strsplit(x,"_"))[1],hosptowes$UMCG_ID))
+#}
+#hosptowes2 <- hosptowes[temp_vec_inf,]
+#selection <- genotypes_test[,as.character(hosptowes2$UMCG_ID)]
+#selection <- cbind(genotypes_test$ID,selection)
+#colnames(selection)[1] <- "ID"
+
+#pheno_test_nin <- pheno_vsd2[rownames(ninsamples),]
+#selected_patients_nin <- umcg_to_biopsy[match(rownames(pheno_test_nin),row.names(umcg_to_biopsy)),]
+#vsd_test_nin <- vsd[,rownames(pheno_test_nin)]
+#vsd_test_nin <- cbind(vsd$ID,vsd_test_nin)
+#colnames(vsd_test_nin)[1] <- "ID"
+
+#nin75list <- read.table(file="test_run_QTLs/nin75_gene_snps_list.txt", header=T, stringsAsFactors=F )
+#nin75list_clean <- nin75list[which(startsWith(nin75list$ID,"rs")),]
+#genelist <- nin75list_clean$Ensid
+
+#nin75_eQTLs <- read.table(file="test_run_QTLs/liu_250KB_nin75_FDR_noHLA_ciseQTLs.txt", header=T, stringsAsFactors=F )
+#nin75only_eQTLs <- nin75_eQTLs[match(nin75list_clean$ID,nin75_eQTLs$snps),]
+
+#pdf(file="test_run_QTLs/eQTL_plots/liu_test_nin75_infvsnin.pdf")
+
+#for (j in 1:length(nin75list_clean$ID))
+#for (j in 1:length(inf75list_clean$ID))  {
+  #mutation <- nin75list_clean$ID[j]
+  #mutation <- inf75list_clean$ID[j]
+  #gene <- ensidtogene[ensidtogene$Gene_ID == genelist[j],2]
+  #pvalue <- signif(nin75only_eQTLs$pvalue[j],digits=3)
+  #FDR <- signif(nin75only_eQTLs$FDR[j],digits=3)
+  #pvalue <- signif(inf75only_eQTLs$pvalue[j],digits=3)
+  #FDR <- signif(inf75only_eQTLs$FDR[j],digits=3)
+  
+  
+  #pheno_sim_inf <- pheno_test_inf[,1:4]
+  #pheno_sim_inf$Location[grep("ileum",pheno_sim_inf$Location,invert=T)] <- "colon"
+  #pheno_sim_nin <- pheno_test_nin[,1:4]
+  #pheno_sim_nin$Location[grep("ileum",pheno_sim_nin$Location,invert=T)] <- "colon"
+
+  #pheno_sim_inf <- cbind(pheno_sim_inf,unlist(selection[which(selection$ID == mutation),-1]),
+  #                     unlist(vsd_test_inf[which(vsd_test_inf$ID == genelist[j]),-1]))
+  #colnames(pheno_sim_inf)[5:6] <- c("Genotype","Expression")
+  #pheno_sim_nin <- cbind(pheno_sim_nin,unlist(selection[which(selection$ID == mutation),-1]),
+  #                     unlist(vsd_test_nin[which(vsd_test_nin$ID == genelist[j]),-1]))
+  #colnames(pheno_sim_nin)[5:6] <- c("Genotype","Expression")
+
+##Temporary solution for alleles
+
+  #homref <- "AA"
+  #het <- "AB"
+  #homalt <- "BB"
+#####
+
+  #pheno_sim_inf$Genotype <- gsub("0",homref,pheno_sim_inf$Genotype)
+  #pheno_sim_inf$Genotype <- gsub("1",het,pheno_sim_inf$Genotype)
+  #pheno_sim_inf$Genotype <- gsub("2",homalt,pheno_sim_inf$Genotype)
+
+  #pheno_sim_nin$Genotype <- gsub("0",homref,pheno_sim_nin$Genotype)
+  #pheno_sim_nin$Genotype <- gsub("1",het,pheno_sim_nin$Genotype)
+  #pheno_sim_nin$Genotype <- gsub("2",homalt,pheno_sim_nin$Genotype)
+
+  #geno_labels <- c(homref,het,homalt)
+
+  #boxplot(pheno_sim_inf$Expression[pheno_sim_inf$Genotype == homref],
+  #      pheno_sim_inf$Expression[pheno_sim_inf$Genotype == het],
+  #      pheno_sim_inf$Expression[pheno_sim_inf$Genotype == homalt],
+  #      pheno_sim_nin$Expression[pheno_sim_nin$Genotype == homref],
+  #      pheno_sim_nin$Expression[pheno_sim_nin$Genotype == het],
+  #      pheno_sim_nin$Expression[pheno_sim_nin$Genotype == homalt],
+  #      names=c(rep(geno_labels,2)),col=c(rep("red",3),rep("blue",3)),
+  #      main=paste("SNP",mutation,"Gene",gene,"Pv",pvalue,"FDR",FDR))
+  #stripchart(list(pheno_sim_inf$Expression[pheno_sim_inf$Genotype == homref],
+  #              pheno_sim_inf$Expression[pheno_sim_inf$Genotype == het],
+  #              pheno_sim_inf$Expression[pheno_sim_inf$Genotype == homalt],
+  #              pheno_sim_nin$Expression[pheno_sim_nin$Genotype == homref],
+  #              pheno_sim_nin$Expression[pheno_sim_nin$Genotype == het],
+  #              pheno_sim_nin$Expression[pheno_sim_nin$Genotype == homalt]),
+  #         vertical=T,method="jitter", add=T, pch=20)
+#}
+
+#dev.off()
