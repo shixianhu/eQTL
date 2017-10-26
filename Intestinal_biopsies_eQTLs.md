@@ -80,10 +80,18 @@ write.table(temp_doubleids_cor, file="input_doubleids_cor.txt", quote=F, row.nam
 Plink command to execute:
 ```
 #Do this on the cluster
-module load Plink
-plink --bfile /groups/umcg-weersma/tmp04/Ruggero/SN0090243/clumping_test/clumping_wes_test/westot --clump gene_file.txt --clump-snp-field customid --clump-field P --r2 dprime with-freqs --clump-verbose --clump-p1 1 --clump-p2 1 --clump-kb 500 --clump-r2 0.2 --out gene_clumped_file.clumped
+awk '{print $2}' input_multi_ciseQTLs.txt | uniq | grep "ENS" > geneids_toclump.txt
+bash get_variant_per_gene.sh
+ls -lh | awk '{print $9}' | grep 'ENSG[0-9]*_eqtls\.txt' > filelist_eqtls.txt
+bash get_customid_and_pvalue_per_variant.sh
+ls -lh | awk '{print $9}' | grep 'ENSG[0-9]*_doubleids_complete.txt' > filelist_doubleids_complete.txt
+for i in *_doubleids_complete.txt; do sed -i '1i rsID\tcustomID\tP' $i; done
+sbatch execute_plink_clumping.sh
+for i in *_clumpedstrict.clumped; do sed -i 's/  */ /g' $i; done
+grep "^ [0-9]* 1" *_clumpedstrict.clumped > summary_clumpedstrict.clumped.txt
+awk 'BEGIN{FS=OFS=" "}{$1="";}1' summary_clumpedstrict.clumped.txt > input_summary.clumped.txt
 ```
 
 5.Plot eQTLs boxplots
 ---------------------
-#Locally, execute eQTL_plots.R (coming soon)
+#Locally, execute eQTL_plots.R
