@@ -46,6 +46,7 @@ Rscript MatrixeQTL_pre-clumping_analysis.R
 
 3.Convert IDs for clumping
 --------------------------
+#Files necessary: input VCF file (eg: input.VCF)
 #Locally or on the cluster do:
 ```
 grep -v "#" input.vcf | awk '{print $3"\t"$1":"$2":""$4":"$5}' > input_doubleids.txt
@@ -75,16 +76,17 @@ write.table(temp_doubleids_cor, file="input_doubleids_cor.txt", quote=F, row.nam
 ```
 4.Per gene clumping
 -------------------
-###Work in Progress
+#Files necessary: 'multi variant per gene' eQTL file (eg: input_multi_eQTLs.txt), ID conversion file (eg: input_doubleids_cor.txt) 
 
-Plink command to execute:
+#Do this on the cluster:
 ```
-#Do this on the cluster
 awk '{print $2}' input_multi_ciseQTLs.txt | uniq | grep "ENS" > geneids_toclump.txt
 bash get_variant_per_gene.sh
 ls -lh | awk '{print $9}' | grep 'ENSG[0-9]*_eqtls\.txt' > filelist_eqtls.txt
-bash get_customid_and_pvalue_per_variant.sh
+bash get_customid_per_variant.sh
 ls -lh | awk '{print $9}' | grep 'ENSG[0-9]*_doubleids_complete.txt' > filelist_doubleids_complete.txt
+bash get_variant_from_doubleids.sh
+ls -lh | awk '{print $9}' | grep "[0-9]_doubleids_list\.txt" > filelist_doubleids_list.txt
 for i in *_doubleids_complete.txt; do sed -i '1i rsID\tcustomID\tP' $i; done
 sbatch execute_plink_clumping.sh
 for i in *_clumpedstrict.clumped; do sed -i 's/  */ /g' $i; done
@@ -94,4 +96,10 @@ awk 'BEGIN{FS=OFS=" "}{$1="";}1' summary_clumpedstrict.clumped.txt > input_summa
 
 5.Plot eQTLs boxplots
 ---------------------
-#Locally, execute eQTL_plots.R
+#Files necessary: Phenotype files, clumped eQTLs file, Genotype file
+#Locally, execute eQTL_plots_ggplot.R;if on the cluster do:
+```
+module load R
+Rscript eQTL_plots_ggplot.R
+
+```
