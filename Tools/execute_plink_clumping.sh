@@ -2,9 +2,9 @@
 #SBATCH --job-name=clumpingpergene
 #SBATCH --output=clumpingpergene_165test_maf5_nomiss_allcor.out
 #SBATCH --error=clumpingpergene_165test_maf5_nomiss_allcor.err
-#SBATCH --time=06:00:00
+#SBATCH --time=24:00:00
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=10gb
+#SBATCH --mem=12gb
 #SBATCH --nodes=1
 
 module load plink
