@@ -13,7 +13,7 @@ module load VCFtools; # cluster only
 vcftools --vcf input.vcf --keep wes_165_ids.txt --recode --out input_165; #extracting the 165 samples
 vcftools --vcf input_165.vcf --recode --remove-filtered-all --out input_165_passonly; #keeping only the variants that pass the QC filters
 vcftools --vcf input_165_passonly.vcf --recode --not-chr X --not-chr Y --out input_165_passonly_noXnoY; #removing X and Y chromosomes
-vcftools --vcf input_165_passonly_noXnoY.vcf --recode --hwe 0.000001 --out input_165_passonly_noXnoY_hwe; #filter by HW equilibrium
+vcftools --vcf input_165_passonly_noXnoY.vcf --recode --hwe 0.001 --out input_165_passonly_noXnoY_hwe; #filter by HW equilibrium
 vcftools --vcf input_165_passonly_noXnoY_hwe.vcf --recode --maf 0.05 --out input_165_passonly_noXnoY_hwe_maf5percent; #filter by MAF
 vcftools --vcf input_165_passonly_noXnoY_hwe_maf3percent.vcf --recode --max-missing 1 --out input_165_passonly_noXnoY_hwe_maf3percent_nomiss; #remove variants with missing genotypes
 #Use the command "scp" to copy the resulting VCF to your machine if necessary
