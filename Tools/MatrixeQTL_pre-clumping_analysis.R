@@ -49,7 +49,7 @@ pvOutputThreshold_tra = 1e-5;
 # Set to numeric() for identity.
 errorCovariance = numeric();
 
-# Distance for local gene-SNP pairs
+# Distance for local gene-SNP pairs, left and right from the border of the gene. since we're not looking at trans only 5e5 is fine
 cisDist = 5e5;
 
 ## Load genotype data
@@ -109,6 +109,7 @@ me = Matrix_eQTL_main(
 unlink(output_file_name_tra);
 unlink(output_file_name_cis);
 
+# collect cis eQTLs in 'all'
 all <- me$cis$eqtls
 all.fdr <- all[which(all$FDR<0.05),] #subset snp-gene pairs with fdr less than 0.05
 
