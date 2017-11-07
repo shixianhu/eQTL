@@ -84,7 +84,7 @@ awk '{print $2}' input_multi_ciseQTLs.txt | uniq | grep "ENS" > geneids_toclump.
 bash get_variant_per_gene.sh
 ls -lh | awk '{print $9}' | grep 'ENSG[0-9]*_eqtls\.txt' > filelist_eqtls.txt
 bash get_customid_per_variant.sh
-ls -lh | awk '{print $9}' | grep 'ENSG[0-9]*_doubleids_complete.txt' > filelist_doubleids_complete.txt
+ls -lh | awk '{print $9}' | grep 'ENSG[0-9]*_doubleids.txt' > filelist_doubleids.txt
 bash get_variant_from_doubleids.sh
 ls -lh | awk '{print $9}' | grep "[0-9]_doubleids_list\.txt" > filelist_doubleids_list.txt
 for i in *_doubleids_complete.txt; do sed -i '1i rsID\tcustomID\tP' $i; done
