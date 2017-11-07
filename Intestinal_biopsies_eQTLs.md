@@ -89,6 +89,7 @@ bash get_variant_from_doubleids.sh
 ls -lh | awk '{print $9}' | grep "[0-9]_doubleids_list\.txt" > filelist_doubleids_list.txt
 bash get_pvalue_per_variant.sh 
 for i in *_doubleids_complete.txt; do sed -i '1i rsID\tcustomID\tP' $i; done
+ls -lh | awk '{print $9}' | grep 'ENSG[0-9]*_doubleids_complete.txt' > filelist_doubleids_complete.txt
 sbatch execute_plink_clumping.sh
 for i in *_clumpedstrict.clumped; do sed -i 's/  */ /g' $i; done
 grep "^ [0-9]* 1" *_clumpedstrict.clumped > summary_clumpedstrict.clumped.txt
