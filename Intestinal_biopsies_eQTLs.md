@@ -50,7 +50,7 @@ Rscript MatrixeQTL_pre-clumping_analysis.R
 #Locally or on the cluster do:
 ```
 grep -v "#" input.vcf | awk '{print $3"\t"$1":"$2":"$4":"$5}' > input_doubleids.txt
-#Add the header to the resulting file: "rsid" for the first column, "customid" for the second
+#Replace the current header of the resulting file: "rsid" for the first column, "customid" for the second
 #In R do:
 temp_doubleids <- read.table(file="input_doubleids.txt",header=T,stringsAsFactors=F)
 
