@@ -95,6 +95,7 @@ for i in *_clumpedstrict.clumped; do sed -i 's/  */ /g' $i; done
 grep "^ [0-9]* 1" *_clumpedstrict.clumped > summary_clumpedstrict.clumped.txt
 awk 'BEGIN{FS=OFS=" "}{$1="";}1' summary_clumpedstrict.clumped.txt > input_summary.clumped.txt
 ```
+add this header to the last file:" CHR F SNP BP P TOTAL NSIG S05 S01 S001 S0001"
 
 5.Plot eQTLs boxplots
 ---------------------
