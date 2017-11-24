@@ -14,7 +14,7 @@ vcftools --vcf input.vcf --keep wes_165_ids.txt --recode --out input_165; #extra
 vcftools --vcf input_165.recode.vcf --recode --remove-filtered-all --out input_165_passonly; #keeping only the variants that pass the QC filters
 vcftools --vcf input_165_passonly.recode.vcf --recode --not-chr X --not-chr Y --out input_165_passonly_noXnoY; #removing X and Y chromosomes
 vcftools --vcf input_165_passonly_noXnoY.recode.vcf --recode --hwe 0.001 --out input_165_passonly_noXnoY_hwe; #filter by HW equilibrium
-vcftools --vcf input_165_passonly_noXnoY_hwe.recode.vcf --recode --maf 0.05 --out input_165_passonly_noXnoY_hwe_maf5percent; #filter by MAF
+vcftools --vcf input_165_passonly_noXnoY_hwe.recode.vcf --recode --maf 0.03 --out input_165_passonly_noXnoY_hwe_maf5percent; #filter by MAF
 vcftools --vcf input_165_passonly_noXnoY_hwe_maf3percent.recode.vcf --recode --max-missing 1 --out input_165_passonly_noXnoY_hwe_maf3percent_nomiss; #remove variants with missing genotypes
 module load BEDTools; # cluster only
 bedtools intersect -v -a input_165_passonly_noXnoY_hwe_maf3percent_nomiss.recode.vcf -b HLAlocus.bed -wa > input_165_passonly_noXnoY_hwe_maf3percent_nomiss_noHLAlocus.recode.vcf
