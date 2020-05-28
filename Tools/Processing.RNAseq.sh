@@ -70,8 +70,11 @@ echo -e "${sample} htseq is done"
 
 # clean processed files
 echo -e "${sample} bam files compressing"
-zip -r $out/samtools/BAM.files.zip $out/samtools/*bam
+zip -r $out/samtools/${sample}.BAM.files.zip $out/samtools/${sample}*bam
 echo -e "${sample} sam files compressing"
-zip -r $out/star/SAM.files.zip $out/star/*sam
+zip -r $out/star/${sample}.SAM.files.zip $out/star/${sample}*sam
+echo -e "${sample} trimmed fastq compressing"
+zip -r $out/trimmomatic/${sample}*FQ.files.zip $out/trimmomatic/${sample}*fq
 
 echo -e "===================> ${sample} processing is done"
+
