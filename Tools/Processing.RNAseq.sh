@@ -74,7 +74,7 @@ zip -r $out/samtools/${sample}.BAM.files.zip $out/samtools/${sample}*bam
 echo -e "${sample} sam files compressing"
 zip -r $out/star/${sample}.SAM.files.zip $out/star/${sample}*sam
 echo -e "${sample} trimmed fastq compressing"
-zip -r $out/trimmomatic/${sample}*FQ.files.zip $out/trimmomatic/${sample}*fq
+zip -r $out/trimmomatic/${sample}.FQ.files.zip $out/trimmomatic/${sample}*fq
 
 echo -e "===================> ${sample} processing is done"
 
