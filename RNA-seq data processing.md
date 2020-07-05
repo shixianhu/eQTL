@@ -31,7 +31,7 @@ sbatch Build.index.sh
 Note, the reference genome and annotation files are derived from GTEx v7 (https://github.com/broadinstitute/gtex-pipeline/tree/master/rnaseq)
 
 ```
-sbatch Generate.process.sh $SAMPLE_PATH/
+bash Generate.process.sh $SAMPLE_PATH/
 ```
 
 
