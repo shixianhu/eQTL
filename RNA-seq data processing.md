@@ -21,13 +21,14 @@ sbatch Build.index.sh
 ---
 - the pipeline in *Generate.process.sh* contains the following:
 
-1. fasqc for pre-processed raw sequencing reads
-2. remove adapters, primers (illumina true-seq) and low-quality reads (average score 25, minlen 50)
-3. fasqc for post-processed sequecing reads
-4. star alingemnt to reference genome 
-5. samtools and picard to generate marked duplicates and insert size metrix
-6. htseq to genenrate gene-level counts
-7. compress and clean processed sam and bam files
+1. 26 million paired-end 150-bp reads were generated per sample. The quality of the raw reads was checked using FastQC with default parameters (v0.11.7). 
+2. The adaptors and low-quality reads were clipped using Trimmomatic (v0.36) with settings length <50 nucleotides, quality <25. 
+3. Then reads quality was checked agian using FastQC.
+4. Reads were aligned to the human genome (Homo_sapiens_assembly19.fasta) using STAR (v2.7.3).
+5. Reads sorting and mapping statistics were obtained using SAMtools (v0.1.19), sambamba(v0.7.0) and picard (v2.20.5.). 
+6. Gene expression was estimated through HTSeq (0.9.1)based on the annotation from GTEx v7(gencode.v19.annotation.patched_contigs.gtf), resulting in an RNA expression dataset of 57825 genes.
+
+Note, the reference genome and annotation files are derived from GTEx v7 (https://github.com/broadinstitute/gtex-pipeline/tree/master/rnaseq)
 
 ```
 sbatch Generate.process.sh $SAMPLE_PATH/
