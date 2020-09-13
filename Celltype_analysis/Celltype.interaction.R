@@ -97,14 +97,14 @@ ggsave("CellType.In_NonIn.pdf",width = 8,height = 5)
 
 # ================================ cell type * SNP interaction analysis ================================ 
 
-# celltype interaction analysis
+# import gene expression table after confounder adjusting
 expression=read.table("ExpressionTable.18PCs.txt",sep = "\t",header = T,row.names = 1,check.names = F,stringsAsFactors = F)
-
 all_cell=deconvolution
 invrank= function(x) {qnorm((rank(x,na.last="keep")-0.5)/sum(!is.na(x)))}
 all_cell = apply(all_cell,2,invrank)
 all_cell=as.data.frame(all_cell,stringsAsFactors = F)
 
+# import 190 significant (FDR <0.05) inflammation-dependent cis-eQTLs
 eInteraction=read.table("Merged.FDR.sig.independent.txt",
                         sep = "\t",header = T,stringsAsFactors = F)
 eSNP=read.table("SNP.sig.dosage.txt",
@@ -127,7 +127,7 @@ expression=merge(expression,metadata[,"UMCG_ID",drop=F],by="row.names")
 rownames(expression)=expression$Row.names
 expression$Row.names=NULL
 
-# interaction model
+# linear mixed interaction model: gene expression = SNP + celltype + SNP * celltype + IBS
 eInteraction=merge(eInteraction,annotation,by.x="ExpressionGene",by.y = "Gene",all=F)
 eInteraction=eInteraction[,c("rsID","id")]
 
@@ -137,7 +137,6 @@ rownames(matrx)=matrx.id$V2
 colnames(matrx)=matrx.id$V2
 
 coupling=read.table("coupling_file.txt",sep = "\t",stringsAsFactors = F,header = F)
-
 celltype=data.frame(SNP=NA,Gene=NA,Cell=cell,
                     IBS.snp.Pvalue=NA,
                     IBS.snp.beta=NA,
