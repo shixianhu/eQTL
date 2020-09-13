@@ -59,6 +59,7 @@ rownames(matrx)=matrx.id$V2
 colnames(matrx)=matrx.id$V2
 
 # ========================== compare results from GEMMA and lme4qtl ===========================
+
 # we compared Z score of the interaction term in the interaction model from GEMMA and lme4qtl
 lme4qtl.results=read.table("Models.compare.txt",sep = "\t",header = T,stringsAsFactors = F)
 gemma.results=read.table("Merged.FDR.sig.independent.txt",sep = "\t",header = T,stringsAsFactors = F)
@@ -77,6 +78,8 @@ for(i in 1:nrow(mm)){
 ggplot(mm, aes(x=z, y=IBS.interaction.t)) + 
   geom_point()+xlab("Z score of interaction term from GEMMA")+ylab("Z score of interaction term from lme4qtl")
 ggsave("Plot/GEMMA.compare.pdf",width = 6,height = 5)
+
+# ========================== compare three models to adjust for random effect ===========================
 
 # three models compare
 # 1)	Interaction model without adjusting for repeat measurements:
