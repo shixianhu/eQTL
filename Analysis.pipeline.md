@@ -57,27 +57,41 @@ Inflammation-dependent cis-eQTLs
 4. Phenotype mismatch and lightly-inflamed samples                  ---> 11 samples are removed
 ```
 
-# Part 1. cis-eQTL analysis
+# Part 1. differential gene expression (DGE) analysis
+
+*step 1. Generate group (CD/UC, colon/ileum, inflamed/non-inflamed) file*
+---
+
+- GEMMA is used for eQTL anlysis instead of DGE analysis, however, we can replace the genotype bimbam file with phenotype file in GEMMA.
+
+```
+For example, we code sample inflammation as 0 (inflamed samples) and 1 (non-inflamed samples) in Inflammation.bimbam
+
+rs00000 A T 1 1 0 1 1 1 1 0 1 1 0 1 0 1 1 1 
+
+where rs00000, A and T are random but nessacery for generating bimbam file to run in GEMMA. 
+```
+
+*step 2. Run GEMMA for DGE annlysis*
+---
+
+```
+gemma-0.98-linux-static -g Inflammation.bimbam -p gene.expression.txt -lmm 4 -km 1 -k IBS.mibs –o DGE.out
+
+```
+
+
+# Part 2. cis-eQTL analysis
 
 
 *step 1. Normalization and log transformation*
 ---
-- Use the expression matrix with included samples to run the TMM normalization.
-```
-An assumption of TMM is the majority of the genes are not differentially expressed. 
 
-The main aim in TMM normalization is to account for library size variation between samples of interest, accounting for the fact that some extremely differentially expressed genes would impact negatively the normalization procedure.
+- Use the expression matrix to run the TMM normalization (edge R).
 
-A trimmed mean is the average after removing the upper and lower x% of the data.
-```
-We use edgeR to run TMM normalization.
 ```
 library(edgeR)
 library(limma)
-library(RColorBrewer)
-library(mixOmics)
-library(VennDiagram)
-library(HTSFilter)
 
 count=read.table("ExpressionTable.txt",sep = "\t",header = T,row.names = 1,check.names = F,stringsAsFactors = F)
 dgeFull <- DGEList(count, remove.zeros = TRUE)
@@ -87,8 +101,6 @@ timmed=as.data.frame(timmed)
 timmed=data.frame(rownames(timmed),timmed,check.names = F)
 colnames(timmed)[1]="probe"
 ```
-
-
 
 *step 2. Remove PCs*
 ---
@@ -129,8 +141,6 @@ corrected_data = apply(expression,2,function(x){
 
 Rscript Phenotype.Prepare.R Normalized.txt Plink.fam
 
----> output: Pheno.txt Reordered.phenotype.txt
-
 vim Reordered.phenotype.txt and add "-"
 ```
 
@@ -145,51 +155,21 @@ ml plink
 
 plink --bfile genoytpe.plink --distance ibs Kinship/IBS
 
----> output: IBS.cluster; IBS.log; IBD.mibs; IBD.mibs.ID;, IBS.nosex
-
 ```
 
-
-*step 3.3. eQTL analysis - Loop for each expression probe using GEMMA*
+*step 3.3. eQTL analysis - Run GEMMA*
 ---
 
-- Note for all *gcc* dependencies. 
+- Intestinal cis-eQTL model in GEMMA
+```
+gemma-0.98-linux-static -bfile genotype.plink -p gene.expression.txt -km 1 -k IBS.mibs -lmm 4 -o $line.outcome 
 
 ```
-ml plink
 
-awk '{print $2}' All_pairs.txt | sort | uniq > Probe.txt
-
-export  LD_LIBRARY_PATH=/home/umcg-hushixian/gemma/gcc-5.4.0-lib-3x53yv4v144c9xp0/lib
-
-cat Probe.txt | while read line
-
-do
-
-grep -w $line All_pairs.txt | awk '{print $1}' > tmp.snp.txt
-plink --bfile genotype.plink --extract tmp.snp.txt --make-bed --out tmp.analysis
-awk -v col=$line 'NR==1{for(i=1;i<=NF;i++){if($i==col){c=i;break}} print $c} NR>1{print $c}' Reordered.phenotype.txt > tmp.expression.txt
-sed -i '1d' tmp.expression.txt 
-
-~/gemma/bin/gemma -bfile tmp.analysis \
--p tmp.expression.txt \
--km 1 -k Kinship/IBS.mibs \
--lmm 4 -o $line.outcome \
--miss 0.99
-
-rm tmp* 
-# this removing is very important TAKE CARE !!!!!!
-
-done
+- Add 𝑆𝑁𝑃 × 𝑖𝑛𝑓𝑙𝑎𝑚𝑚𝑎𝑡𝑖𝑜𝑛 (gxe) in an interaction model in GEMMA
 ```
-- Add 𝑆𝑁𝑃 × 𝑖𝑛𝑓𝑙𝑎𝑚𝑚𝑎𝑡𝑖𝑜𝑛 interaction term in GEMMA
-```
-~/gemma/bin/gemma -bfile tmp.analysis \
--p tmp.expression.txt \
--gxe covariate.txt \
--km 1 -k Kinship/IBS.mibs \
--lmm 4 -o $line.outcome \
--miss 0.99
+gemma-0.98-linux-static -bfile genotype.plink -p tmp.expression.txt -gxe covariate.txt -km 1 -k IBS.mibs -lmm 4 -o $line.outcome 
+
 ```
 
 *step 3.4. eQTL analysis - Merging results*
