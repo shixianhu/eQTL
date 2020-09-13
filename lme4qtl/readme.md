@@ -11,14 +11,14 @@
 ```
  1)	Interaction model without adjusting for repeat measurements:
  
-    'lm' function: gene = intercept + PCs (1,3~18) + SNP + Inflammation + SNP*Inflammation
+       'lm' function: gene = intercept + PCs (1,3~18) + SNP + Inflammation + SNP*Inflammation
  
  2)	Interaction model using patients ID vector (1|ID) for repeat measurements:
  
-    'lmer' function: gene = intercept + PCs (1,3~18) + SNP + Inflammation + SNP*Inflammation + (1|ID)
+       'lmer' function: gene = intercept + PCs (1,3~18) + SNP + Inflammation + SNP*Inflammation + (1|ID)
  
  3)	Interaction model using IBS matrix for repeat measurements:
  
-    'relmatLmer' function: gene = intercept + PCs (1,3~18) + SNP + Inflammation + SNP*Inflammation + (IBS matrix)
+       'relmatLmer' function: gene = intercept + PCs (1,3~18) + SNP + Inflammation + SNP*Inflammation + (IBS matrix)
  
 ```
