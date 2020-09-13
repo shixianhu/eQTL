@@ -1,4 +1,6 @@
-# deconvolution
+# we used xCell to predict cell type enrichment using RNA-seq data
+# we assessed SNP * celltype enrichment effect for the 190 inflammation-dependent cis-eQLs
+
 library(xCell)
 library(foreach)
 library(lme4qtl)
@@ -11,36 +13,16 @@ library(randomcoloR)
 library(crayon)
 library(ggforce)
 
-expression=read.table("TMM_expression.table.Log2Transformed.ProbesCentered.SamplesZTransformed.18PCAsOverSamplesRemoved.txt",
-                      sep = "\t",header = T,stringsAsFactors = F,check.names = F,row.names = 1)
-anno=read.table("annotation.file.txt",sep = "\t",header = T,stringsAsFactors = F)
-anno=anno[anno$Gene %in% rownames(expression),]
-anno=anno[order(anno$Gene),]
-expression=expression[rownames(expression) %in% anno$Gene,]
-expression=expression[order(rownames(expression)),]
-expression=merge(expression,anno,by.x="row.names",by.y = "Gene",all=F)
-expression=expression[!duplicated(expression$id),]
-rownames(expression)=expression$id
-expression$Row.names=NULL
-expression$id=NULL
+# ================================ cell type deconvolution ================================ 
 
-# import raw table contains gene expression count 
+# import gene expression table 
 count=read.table("ExpressionTable.txt",sep = "\t",header = T,row.names = 1,check.names = F,stringsAsFactors = F)
-# use edgeR for normolization whole dataset
-# more information about normalization can be found http://www.nathalievialaneix.eu/doc/html/solution_edgeR-tomato.html
-dgeFull <- DGEList(count, remove.zeros = TRUE)        # generate project
-dgeFull <- calcNormFactors(dgeFull, method="TMM")     # TMM normalization
-expression_norm=cpm(dgeFull,log = TRUE, prior.count = 1)   # calculate cpm
-expression_norm=as.data.frame(t(expression_norm))
-annotation=read.table("annotation.file.txt",header = T,sep = "\t",stringsAsFactors = F)
-annotation=annotation[annotation$Gene %in% colnames(expression_norm),]
-expression_norm=expression_norm[,colnames(expression_norm) %in% annotation$Gene]
-annotation=annotation[order(match(annotation$Gene,colnames(expression_norm))),]
-colnames(expression_norm)=annotation$id
+dgeFull <- calcNormFactors(dgeFull, method="TMM")    
+expression_norm=cpm(dgeFull,log = TRUE, prior.count = 1)  
 expression_norm=as.data.frame(t(expression_norm))
 
+# import phenotype data
 metadata=read.table("complete_pheno_table_pil280.txt",sep = " ",header = T,stringsAsFactors = F,check.names = F)
-metadata$Inflammation[metadata$Inflammation=="light_I"]="NI"
 rownames(metadata)=metadata$ID
 metadata$Location[metadata$Location!="ileum"]="colon"
 metadata$Inflammation[metadata$Inflammation=="NI"]=0
@@ -64,6 +46,9 @@ deconvolution=deconvolution[,c("cDC",	"Macrophages M1",	"NK cells",	"pDC",	"Macr
                                "Mast cells",	"Neutrophils",	"Eosinophils",	"Endothelial cells",
                                "Epithelial cells",	"Fibroblasts",	"Smooth muscle"),drop=F]
 
+# ================================ cell type enrichment compare ================================ 
+
+# compare cell type enrichemnt between inflamed and non-inflamed biopsies
 compare=matrix(nrow = ncol(deconvolution),ncol = 2)
 compare=as.data.frame(compare)
 colnames(compare)=c("CellType","Pvalue")
@@ -77,7 +62,6 @@ for(i in 1:ncol(deconvolution)){
   compare$Pvalue[i]=Pvalue
 }
 compare$FDR=p.adjust(compare$Pvalue)
-#compare=compare[compare$FDR<0.05,]
 compare=compare[order(compare$FDR),]
 
 compare_all=data.frame(Score=NA,Group=NA,Cell=NA,Sample=NA)
@@ -111,8 +95,11 @@ ggplot(compare_all, aes(compare_all$Cell,compare_all$Score)) +
   #+coord_flip()
 ggsave("CellType.In_NonIn.pdf",width = 8,height = 5)
 
-# select only different cell types and inflamed biopsy
-#inflamed=inflamed[,colnames(inflamed) %in% compare$CellType]
+# ================================ cell type * SNP interaction analysis ================================ 
+
+# celltype interaction analysis
+expression=read.table("ExpressionTable.18PCs.txt",sep = "\t",header = T,row.names = 1,check.names = F,stringsAsFactors = F)
+
 all_cell=deconvolution
 invrank= function(x) {qnorm((rank(x,na.last="keep")-0.5)/sum(!is.na(x)))}
 all_cell = apply(all_cell,2,invrank)
@@ -190,11 +177,6 @@ for(n in 1:28){
   tmp.matrix=as.matrix(tmp.matrix)
   aa[,3]=as.numeric(as.character(aa[,3]))
   aa$gene=aa[,2]
-  
-  colIQR <- colIQRs(as.matrix(aa$gene), na.rm = T)
-  tmp=colQuantiles(as.matrix(aa$gene), probs = c(0.25, 0.75), na.rm = T)
-  aa$gene[aa$gene< tmp[1] - 3 * colIQR]=NA
-  aa$gene[aa$gene > tmp[2] + 3 * colIQR]=NA 
 
   fit0<-relmatLmer(gene ~ aa[,3]+aa[,5]+aa[,3]*aa[,5]+(1|Row.names),relmat = list(Row.names = tmp.matrix),data=aa)
 
@@ -219,3 +201,4 @@ celltype.clean=na.omit(celltype)
 celltype.clean$IBS.interaction.FDR=p.adjust(celltype.clean$IBS.interaction.Pvalue)
 celltype.clean$IBS.snp.FDR=p.adjust(celltype.clean$IBS.snp.Pvalue)
 celltype.clean$IBS.enrichscore.FDR=p.adjust(celltype.clean$IBS.enrichscore.Pvalue)
+
