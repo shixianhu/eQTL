@@ -50,11 +50,56 @@ Inflammation-dependent cis-eQTLs
  
 *RNA-seq data QC*
 ---
+
 ```
 1. Reads alignment percentage < 90%; mapped reads < 30 million.     ---> 4 samples are removed
 2. Duplicate samples check                                          ---> 2 samples are removed
 3. Outliers from expression data (PCA check).                       ---> 2 samples are removed
 4. Phenotype mismatch and lightly-inflamed samples                  ---> 11 samples are removed
+
+```
+
+*Normalization and log transformation*
+---
+
+- Use the expression matrix to run the TMM normalization (edge R).
+
+```
+library(edgeR)
+library(limma)
+
+count=read.table("ExpressionTable.txt",sep = "\t",header = T,row.names = 1,check.names = F,stringsAsFactors = F)
+dgeFull <- DGEList(count, remove.zeros = TRUE)
+dgeFull <- calcNormFactors(dgeFull, method="TMM")
+timmed=cpm(dgeFull,log = TRUE, prior.count = 1) 
+timmed=as.data.frame(timmed)
+timmed=data.frame(rownames(timmed),timmed,check.names = F)
+colnames(timmed)[1]="probe"
+```
+
+*Remove PCs*
+---
+
+- By adjusting for a set of PCs, we try to remove confouders effects.
+
+```
+# get PCs of gene expression
+
+expression=timmed[,2:ncol(timmed)]
+rownames(expression)=rownames(timmed)
+pca=prcomp(timmed,scale = TRUE)
+eigenvalue=get_eig(pca)
+ind <- get_pca_ind(pca)
+pca_matrix=as.data.frame(ind$coord)
+pca_matrix=pca_matrix[1:18,]
+
+# corrected for targeted PCs (for example, the first 18PCs)
+
+pca_matrix=pca_matrix[1:18,]
+corrected_data = apply(expression,2,function(x){
+  x.resid = resid(lm(x ~ ., data=pca_matrix))
+  return(x.resid)
+})
 ```
 
 # Part 1. differential gene expression (DGE) analysis
@@ -84,51 +129,7 @@ gemma-0.98-linux-static -g Inflammation.bimbam -p gene.expression.txt -lmm 4 -km
 # Part 2. cis-eQTL analysis
 
 
-*step 1. Normalization and log transformation*
----
-
-- Use the expression matrix to run the TMM normalization (edge R).
-
-```
-library(edgeR)
-library(limma)
-
-count=read.table("ExpressionTable.txt",sep = "\t",header = T,row.names = 1,check.names = F,stringsAsFactors = F)
-dgeFull <- DGEList(count, remove.zeros = TRUE)
-dgeFull <- calcNormFactors(dgeFull, method="TMM")
-timmed=cpm(dgeFull,log = TRUE, prior.count = 1) 
-timmed=as.data.frame(timmed)
-timmed=data.frame(rownames(timmed),timmed,check.names = F)
-colnames(timmed)[1]="probe"
-```
-
-*step 2. Remove PCs*
----
-
-- By adjusting for a set of PCs, we try to remove confouders effects.
-
-```
-# get PCs of gene expression
-
-expression=timmed[,2:ncol(timmed)]
-rownames(expression)=rownames(timmed)
-pca=prcomp(timmed,scale = TRUE)
-eigenvalue=get_eig(pca)
-ind <- get_pca_ind(pca)
-pca_matrix=as.data.frame(ind$coord)
-pca_matrix=pca_matrix[1:18,]
-
-# corrected for targeted PCs (for example, the first 18PCs)
-
-pca_matrix=pca_matrix[1:18,]
-corrected_data = apply(expression,2,function(x){
-  x.resid = resid(lm(x ~ ., data=pca_matrix))
-  return(x.resid)
-})
-```
-
-
-*step 3.1. eQTL analysis - Match expression data to genotype data*
+*step 1. eQTL analysis - Match expression data to genotype data*
 ---
 
  - All_pairs.txt (gene-SNP pairs)
@@ -145,7 +146,7 @@ vim Reordered.phenotype.txt and add "-"
 ```
 
 
-*step 3.2. eQTL analysis - Generate relatedness file*
+*step 2. eQTL analysis - Generate relatedness file*
 ---
 
 - This step is to consider kinship as a random effect in mixed linear model.
@@ -157,7 +158,7 @@ plink --bfile genoytpe.plink --distance ibs Kinship/IBS
 
 ```
 
-*step 3.3. eQTL analysis - Run GEMMA*
+*step 3. eQTL analysis - Run GEMMA*
 ---
 
 - Intestinal cis-eQTL model in GEMMA
@@ -172,7 +173,7 @@ gemma-0.98-linux-static -bfile genotype.plink -p tmp.expression.txt -gxe covaria
 
 ```
 
-*step 3.4. eQTL analysis - Merging results*
+*step 4. eQTL analysis - Merging results*
 ---
 
 - To merge all eQTL results of each expression gene (*eg. ENSG00000072135*) in output folder.
