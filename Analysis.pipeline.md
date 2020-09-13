@@ -54,12 +54,13 @@ Inflammation-dependent cis-eQTLs
 1. Reads alignment percentage < 90%; mapped reads < 30 million.     ---> 4 samples are removed
 2. Duplicate samples check                                          ---> 2 samples are removed
 3. Outliers from expression data (PCA check).                       ---> 2 samples are removed
+4. Phenotype mismatch and lightly-inflamed samples                  ---> 11 samples are removed
 ```
 
 # Part 1. cis-eQTL analysis
 
 
-*step 1. Normalization*
+*step 1. Normalization and log transformation*
 ---
 - Use the expression matrix with included samples to run the TMM normalization.
 ```
@@ -71,10 +72,6 @@ A trimmed mean is the average after removing the upper and lower x% of the data.
 ```
 We use edgeR to run TMM normalization.
 ```
-# ==============================================================================================================
-#                                               normalization
-# ==============================================================================================================
-
 library(edgeR)
 library(limma)
 library(RColorBrewer)
@@ -83,114 +80,57 @@ library(VennDiagram)
 library(HTSFilter)
 
 count=read.table("ExpressionTable.txt",sep = "\t",header = T,row.names = 1,check.names = F,stringsAsFactors = F)
-metadata=read.table("Metadata.txt",sep = "\t",header = T,row.names = 1,stringsAsFactors = F)
-```
-```
-=====================================
-# one sample with umkown diagnosis, just lable it as CD
-
-metadata$Diagnosis[metadata$Diagnosis=="Indet"]="CD"
-cd=metadata[metadata$Diagnosis=="CD",]
-cd=cd[rownames(cd) %in% colnames(count),]
-uc=metadata[metadata$Diagnosis=="UC" | metadata$Diagnosis=="IBDU",]
-uc=uc[rownames(uc) %in% colnames(count),]
-
-count_cd=count[,colnames(count) %in% rownames(cd)]
-count_uc=count[,colnames(count) %in% rownames(uc)]
-```
-```
-=====================================
-# use edgeR for normolization CD
-
-dgeFull <- DGEList(count_cd, remove.zeros = TRUE)
+dgeFull <- DGEList(count, remove.zeros = TRUE)
 dgeFull <- calcNormFactors(dgeFull, method="TMM")
-timmed=cpm(dgeFull)
+timmed=cpm(dgeFull,log = TRUE, prior.count = 1) 
 timmed=as.data.frame(timmed)
 timmed=data.frame(rownames(timmed),timmed,check.names = F)
 colnames(timmed)[1]="probe"
-
-write.table(timmed,file = "TMM_expression.CD.table.txt",sep = "\t",quote = F,row.names = F)
-```
-```
-=====================================
-# use edgeR for normolization UC
-
-dgeFull <- DGEList(count_uc, remove.zeros = TRUE)
-dgeFull <- calcNormFactors(dgeFull, method="TMM")
-timmed=cpm(dgeFull)
-timmed=as.data.frame(timmed)
-timmed=data.frame(rownames(timmed),timmed,check.names = F)
-colnames(timmed)[1]="probe"
-
-write.table(timmed,file = "TMM_expression.UC.table.txt",sep = "\t",quote = F,row.names = F)
 ```
 
 
-*step 2. Log transformation, Center scale and remove PCs (CD as example)*
+
+*step 2. Remove PCs*
 ---
 
-- Log2 transformation.
-- Probe centering and scaling (Z-transform).
-- By adjusting for a set of PCs, we try to remove batch effects in the data.
+- By adjusting for a set of PCs, we try to remove confouders effects.
 
 ```
-java -Xmx10g -Xms10g -jar ~/eqtl-mapping-pipeline-1.4nZ/eqtl-mapping-pipeline.jar \
---mode normalize --in TMM_expression.CD.table.txt \
---out ./ --logtransform --centerscale \
---adjustPCA --maxnrpcaremoved 32 --stepsizepcaremoval 2 \
-2>&1 | tee ./normalization.log
+# get PCs of gene expression
 
----> output: TMM_expression.CD.table.Log2Transformed.ProbesCentered.SamplesZTransformed.20PCAsOverSamplesRemoved.txt
+expression=timmed[,2:ncol(timmed)]
+rownames(expression)=rownames(timmed)
+pca=prcomp(timmed,scale = TRUE)
+eigenvalue=get_eig(pca)
+ind <- get_pca_ind(pca)
+pca_matrix=as.data.frame(ind$coord)
+pca_matrix=pca_matrix[1:18,]
+
+# corrected for targeted PCs (for example, the first 18PCs)
+
+pca_matrix=pca_matrix[1:18,]
+corrected_data = apply(expression,2,function(x){
+  x.resid = resid(lm(x ~ ., data=pca_matrix))
+  return(x.resid)
+})
 ```
 
 
 *step 3.1. eQTL analysis - Match expression data to genotype data*
 ---
 
-Note:
- - before this, you need a rough run using Lude's eQTLmapping-pipeline to get all pairs between cis-SNPs and expressed-gene:
- 
- https://github.com/molgenis/systemsgenetics/wiki/eQTL-mapping-analysis-cookbook-for-RNA-seq-data#downloading-the-software-and-reference-data
- ```
- Take care about memory used, 156GB. Don't understand why it is so large yet.
- 
-!/bin/bash
-#BATCH --job-name=cis
-#SBATCH --error=cis.err
-#SBATCH --output=cis.out
-#SBATCH --mem=156gb
-#SBATCH --time=99:00:00
-#SBATCH --cpus-per-task=6
-
-module load Java
-java -XX:ParallelGCThreads=5 -Xmx150G -jar eqtl-mapping-pipeline-1.4.1-SNAPSHOT/eqtl-mapping-pipeline.jar --mode metaqtl --settings setting.xml
- ```
- - All_pairs.txt (64 million at this moment)
- - CD_plink (genotype file, 185 CD biopsies, 6,894,979 variants)
- - CD_Normalized (CD expression data after removing PCs)
- - coupling file (connect biopsy ID to WES ID, 185 IDs)
+ - All_pairs.txt (gene-SNP pairs)
+ - plink files (genotype file)
+ - Normalized.txt (gene expression data after removing PCs)
+ - coupling file (connect biopsy ID to WES+genotype ID)
 
 ```
+# match the samples orders of phenotype file and genotype file
 
-In folder CD_Normalized:
-# this step is optional, just remove some undetected probes, will not change much on the cauculation speed
-
-awk '{print $2}' ../All_pairs.txt | sort | uniq > Probe.txt
-
-sed -n "1,1p" CD_normalized.table > header.txt
-
-awk ' FNR==NR { a[$1]=$0; next } $1 in a { print }' <(less Probe.txt) <(less CD_normalized.table) >> tmp.txt
-
-cat header.txt tmp.txt > CD_normalized.txt
-
-rm tmp.txt
-```
-```
-In folder CD_Matched_table
-
-Rscript Phenotype.Prepare.R ../CD_Normalized/CD_normalized.txt ../CD_plink/CD.plink.fam
+Rscript Phenotype.Prepare.R Normalized.txt Plink.fam
 
 ---> output: Pheno.txt Reordered.phenotype.txt
+
 vim Reordered.phenotype.txt and add "-"
 ```
 
@@ -203,7 +143,7 @@ vim Reordered.phenotype.txt and add "-"
 ```
 ml plink
 
-plink --bfile CD_plink/CD.plink --cluster --matrix --out ./Kinship/IBS
+plink --bfile genoytpe.plink --distance ibs Kinship/IBS
 
 ---> output: IBS.cluster; IBS.log; IBD.mibs; IBD.mibs.ID;, IBS.nosex
 
@@ -226,9 +166,9 @@ cat Probe.txt | while read line
 
 do
 
-grep -w $line ../All_pairs.txt | awk '{print $1}' > tmp.snp.txt
-plink --bfile ./CD_plink/CD.plink --extract tmp.snp.txt --make-bed --out tmp.analysis
-awk -v col=$line 'NR==1{for(i=1;i<=NF;i++){if($i==col){c=i;break}} print $c} NR>1{print $c}' ./CD_Matched_table/Reordered.phenotype.txt > tmp.expression.txt
+grep -w $line All_pairs.txt | awk '{print $1}' > tmp.snp.txt
+plink --bfile genotype.plink --extract tmp.snp.txt --make-bed --out tmp.analysis
+awk -v col=$line 'NR==1{for(i=1;i<=NF;i++){if($i==col){c=i;break}} print $c} NR>1{print $c}' Reordered.phenotype.txt > tmp.expression.txt
 sed -i '1d' tmp.expression.txt 
 
 ~/gemma/bin/gemma -bfile tmp.analysis \
@@ -246,7 +186,7 @@ done
 ```
 ~/gemma/bin/gemma -bfile tmp.analysis \
 -p tmp.expression.txt \
--gxe CD_Covariate/CD.covariate.txt \
+-gxe covariate.txt \
 -km 1 -k Kinship/IBS.mibs \
 -lmm 4 -o $line.outcome \
 -miss 0.99
